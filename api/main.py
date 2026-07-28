@@ -19,7 +19,7 @@
    - Get basic code to work (DONE)
    - Add in ENA Portal: https://www.ebi.ac.uk/ena/portal/api/swagger-ui/index.html (DONE)
    - Integrate with Cham's script 
-     - Fetching samples: Yes 
+     - Fetching samples: Yes (except not really freaking HTML)
      - Classifying samples: Yesn't
    - Integrate with PostGreSQL for large database size
    - Integrate with pre-existing HTML webpage
@@ -33,12 +33,17 @@
 
    """
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from ena_accessor import fetch
-from scripts.fetch_ena_samples import run # note: immensely janky right now
+from scripts.fetch_ena_samples import run, addToDatabase # note: immensely janky right now
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+
+# Serve your website folder as static files
+app.mount("/", StaticFiles(directory="database", html=True), name="static")
 
 @app.get("/")
 def read_root():
@@ -76,8 +81,8 @@ class AccessionCode(BaseModel):
 # before choosing to do. All that other stuff
 @app.get("/fetch/{accession}")
 def fetch_accession(accession: str):
-    run(accession_codes=accession)
-    return {"status": "ok", "accession": accession}
+    df = run(accession_codes=accession) 
+    return {"status": "ok", "accession": accession, "data": df.to_dict(orient="records")}
     # return data
     """data = fetch(accession)
     return data"""
@@ -87,7 +92,8 @@ def fetch_accession(accession: str):
 # Sequence should be: Press "Upload to database" => Call run(accession) => do all that fun stuff => Write to database and not a csv
 @app.post("/submit")
 def submit(request: AccessionCode):
-    run(accession_codes=request.accession_code)
+    df = run(accession_codes=request.accession_code) #note there has to be a cleaner way of doing this
+    addToDatabase(df)
     return {"status": "ok", "accession": request.accession_code}
 
 # Debugger

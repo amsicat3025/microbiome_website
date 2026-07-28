@@ -34,7 +34,7 @@
                     <div class = "d-flex align-items-center gap-3">
                         <form id="accession_search_form" class="d-flex align-items-center gap-2">
                             <input name="accessionCode" class = "form-control" id="accessionCodeSearch" placeholder="e.g. PRJNA545312" type="text">
-                            <input type="submit" class = "btn btn-outline-secondary" id="accessionCodeSubmit" value="Pull Data">
+                            <input type="submit" class = "button" id="accessionCodeSubmit" value="Pull Data">
                         </form> 
                     </div>
                 </div>
@@ -45,9 +45,9 @@
                 <div class="table_wrapper">
                     <table id=bio_table class="table table-striped mb-0 gap-3">
                         <thead>
-                            <tr id="header_row"></tr>
+                            <tr id="study_header_row"></tr>
                         </thead>
-                        <tbody id="micro_table_body"></tbody>
+                        <tbody id="study_table_body"></tbody>
                     </table>
                 </div>
             </div>
@@ -68,11 +68,11 @@
             <div class="file_upload">
                 <div class="card">
                     <div class="row">
-                    <form>
+                    <form id="file_form">
                         <label for="myfile"><b>Upload a CSV file:</b></label>
                         <div class="col-6 d-flex align-items-center gap-3">
                             <input type="file" class = "form-control w-auto" id="myfile" name="myfile" accept=".csv" required>
-                            <button type="submit" class ="btn btn-primary" id="submit-file" >Upload File</button>
+                            <button type="submit" class="button" id="submit-file" >Upload File</button>
                         </div>
                     </form>
                 </div>
@@ -99,7 +99,7 @@
                     <div class = "d-flex align-items-center gap-3">
                         <form id="custom_attribute_search_form" class="d-flex align-items-center gap-2">
                             <input name="customAttribute" class = "form-control" id="customAttribute" placeholder="e.g. control" type="text">
-                            <input type="submit" class = "btn btn-outline-secondary" id="customSearchSubmit" value="Search">
+                            <input type="submit" class = "button" id="customSearchSubmit" value="Search">
                         </form> 
                     </div>
                     <p id="search_results" style="display: none;"><span id="numberStudies">0</span> studies found </p>

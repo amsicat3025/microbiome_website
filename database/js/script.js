@@ -72,6 +72,34 @@ URL.revokeObjectURL(worker_url);
 
 const form = document.querySelector("form");
 
+console.log("script loaded");
+
+/*document.addEventListener("DOMContentLoaded", function() {
+    const alreadyActive = document.querySelector(".tablinks.active");
+    if (!alreadyActive) {
+        document.getElementById("defaultOpen").click();
+    }
+
+    console.log("DOM ready");
+
+    const form = document.getElementById("accession_search_form");
+    console.log("form found:", form);
+
+    if (form) 
+    {
+        form.addEventListener("submit", async(e) => {
+            console.log("submit fired");
+            e.preventDefault();
+            const accessionCode = document.getElementById("accessionCodeSearch").value;
+            await getAccession(accessionCode);
+        });
+    } 
+    else 
+    {
+        console.error("Form not found — ID mismatch");
+    }
+});*/
+
 //Function for hiding/showing tabs
 //Taken from here: https://www.w3schools.com/howto/howto_js_tabs.asp
 //Done by default at the start
@@ -118,18 +146,19 @@ document.getElementById("defaultOpen").click();
 //Note to self: Ask if we want to keep the data persistent/backside later
 
 //==============Code for Access Data Tab====================
-
 document.getElementById("accession_search_form").addEventListener("submit", async(e) =>
 {
     e.preventDefault();
-
+    console.log("Submit fired");
     let accession_code = document.getElementById("accessionCodeSearch").value;
 
-    getAccession(accession_code);
+    await getAccession(accession_code);
 
 });
 
 //Documentation HERE: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
+//DuckDB Documentation: https://duckdb.org/docs/lts/data/json/loading_json
+//DuckDB JSON from Path Documentation: https://shell.duckdb.org/docs/classes/index.DuckDBConnection.html#insertjsonfrompath
 async function getAccession(accessionCode)
 {
     try
@@ -137,10 +166,46 @@ async function getAccession(accessionCode)
         console.log("Response successful");
         const responseString = "http://127.0.0.1:8000/fetch/" + accessionCode;
         const response = await fetch(responseString);
+        let result = await response.json();
+        console.log("Response result received");
 
-        const data = await response.json();
-        console.log(data);
-        alert("Study Data found successfully");
+        console.log(result.status);
+        console.log(result.accession);
+        console.log(result.data);
+
+        //Open database connection
+        const conn = await db.connect();
+        console.log("Database connected");
+
+        //let query_string = "CREATE TABLE IF NOT EXISTS study_data AS SELECT * FROM read_json_auto(?," + result.data + ");";
+        let dataStr = JSON.stringify(result.data);
+        console.log("JSON stringified");
+        await db.registerFileText("study_data.json", dataStr);
+        console.log("Registered as file text");
+        //Two separate tables so we don't cross-contaminate the tables in the other tabs
+        
+        await conn.query(`DROP TABLE IF EXISTS study_data;`) 
+        console.log("Table dropped");
+        //await conn.query(`CREATE TABLE study_data AS SELECT * FROM read_json_auto('study_data.json');`);
+        await conn.insertJSONFromPath("study_data.json", {
+            name: "study_data",
+            schema: "main",
+            create: true
+        });
+        console.log("Table created");
+        
+        let study_results = await conn.query("SELECT * FROM study_data;");
+        console.log("Table results fetched");
+        //Close database connection
+        await conn.close();
+        console.log("Successfully uploaded database"); 
+
+        //Display study data in tables
+        console.log("Displaying HTML now");
+        displayHTML(study_results, "study_table_body", "study_header_row");
+        console.log("HTML successfully displayed");
+
+        //alert("Study Data accessed successfully");
     }
     catch(error)
     {
@@ -162,7 +227,7 @@ async function getAccession(accessionCode)
     Research is currently being conducted on how to accomplish this. 
 */
 //Documentation: https://developer.mozilla.org/en-US/docs/Web/API/File
-document.getElementById("custom_attribute_search_form").addEventListener("submit", async e => {
+document.getElementById("file_form").addEventListener("submit", async e => {
     e.preventDefault();
     // save the file from the input file
     const file = document.getElementById("myfile").files[0];
@@ -185,7 +250,7 @@ document.getElementById("custom_attribute_search_form").addEventListener("submit
         const result = await conn.query('SELECT * FROM micro_data LIMIT 100;');
 
         //Displays the table data in HTML
-        displayHTML(result);
+        displayHTML(result, "micro_table_body", "header_row");
 
         //Hide number of relevant search results
         document.getElementById("search_results").style.display = "none";
@@ -263,7 +328,7 @@ document.getElementById("custom_attribute_search_form").addEventListener("submit
     count = result.toArray().length;
     document.getElementById("numberStudies").innerText = count;
     document.getElementById("search_results").style.display = "block";
-    displayHTML(result);
+    displayHTML(result, "micro_table_body", "header_row");
 
     //Close database connection
     await conn.close(); 
@@ -309,7 +374,7 @@ function createSearchString(searchAttribute)
 
     May be updated later for efficiency. 
 */
-function displayHTML(result)
+function displayHTML(result, tableName, headerName)
 {
     //convert query result to an array so it can be used later
     const data = result.toArray();
@@ -324,7 +389,7 @@ function displayHTML(result)
     }
     
     //Variable that stores the micro_table_body
-    let bioBody = document.getElementById("micro_table_body")
+    let bioBody = document.getElementById(tableName)
 
     //Clears table if anything was already uploaded
     bioBody.innerHTML = ""; 
@@ -334,7 +399,7 @@ function displayHTML(result)
     let columns = result.schema.fields.map(f => f.name);
 
     //Dynamically builds column headers 
-    let thead = document.getElementById("header_row");
+    let thead = document.getElementById(headerName); //This may cause problems later given that it's called header_row in two separte tables. Will need to see effects
     thead.innerHTML = "";
     for(let i = 0; i < col; ++i)
     {
@@ -385,7 +450,7 @@ function displayHTML(result)
         //Inserts the HTML into the table
         bioBody.insertAdjacentHTML("beforeend", rowHTML);
     }
-    toggleAllColumns();
+    //toggleAllColumns();
 }
 
 /*
@@ -457,7 +522,7 @@ function elementToggle(checkbox_id, checkbox_name)
 }
 
 //Called here so that the checkbox functionality is always active
-toggleAllColumns();
+//toggleAllColumns();
 
 //Adds the ability to hide/show columns to every checkbox
 function toggleAllColumns()
