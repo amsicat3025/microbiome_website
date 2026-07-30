@@ -589,6 +589,8 @@ def createDataRow(df):
     df.to_sql("micro_data",engine,if_exists="append",index=False)
 
 def addToDatabase(df):
+    # Need to avoid duplicates being added
+    # Convert JSON => df
     df.to_sql("micro_data",engine,if_exists="append",index=False)
 
 

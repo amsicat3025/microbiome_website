@@ -33,17 +33,13 @@
 
    """
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from ena_accessor import fetch
 from scripts.fetch_ena_samples import run, addToDatabase # note: immensely janky right now
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+import pandas as pd
 
 app = FastAPI()
-
-
-# Serve your website folder as static files
-app.mount("/", StaticFiles(directory="database", html=True), name="static")
 
 @app.get("/")
 def read_root():
@@ -74,6 +70,9 @@ app.add_middleware(
 class AccessionCode(BaseModel):
     accession_code: str
 
+class DataFrame(BaseModel):
+    dataframe: str
+
 """Used for accession code fetching using the public ENA API"""
 # Note: Should only be returning data
 # But the current version is for debugging the parsing/whatever
@@ -91,10 +90,10 @@ def fetch_accession(accession: str):
 # Status Code documentation: https://fastapi.tiangolo.com/advanced/response-change-status-code/
 # Sequence should be: Press "Upload to database" => Call run(accession) => do all that fun stuff => Write to database and not a csv
 @app.post("/submit")
-def submit(request: AccessionCode):
-    df = run(accession_codes=request.accession_code) #note there has to be a cleaner way of doing this
+def submit(dataframe: str):
+    df = pd.DataFrame(dataframe.dict())
     addToDatabase(df)
-    return {"status": "ok", "accession": request.accession_code}
+    return {"status": "ok", "dataframe": dataframe}
 
 # Debugger
 if __name__ == '__main__':

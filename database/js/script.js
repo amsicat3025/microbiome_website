@@ -156,6 +156,14 @@ document.getElementById("accession_search_form").addEventListener("submit", asyn
 
 });
 
+document.getElementById("database_save").addEventListener("click", async(e) =>
+{
+    e.preventDefault();
+    console.log("Trying to add study data to database");
+
+    addToDatabase(); 
+});
+
 //Documentation HERE: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
 //DuckDB Documentation: https://duckdb.org/docs/lts/data/json/loading_json
 //DuckDB JSON from Path Documentation: https://shell.duckdb.org/docs/classes/index.DuckDBConnection.html#insertjsonfrompath
@@ -180,11 +188,13 @@ async function getAccession(accessionCode)
         //let query_string = "CREATE TABLE IF NOT EXISTS study_data AS SELECT * FROM read_json_auto(?," + result.data + ");";
         let dataStr = JSON.stringify(result.data);
         console.log("JSON stringified");
+        sessionStorage.setItem("studyData", dataStr);
+        console.log("Saved in session storage");
         await db.registerFileText("study_data.json", dataStr);
         console.log("Registered as file text");
         //Two separate tables so we don't cross-contaminate the tables in the other tabs
         
-        await conn.query(`DROP TABLE IF EXISTS study_data;`) 
+        await conn.query('DROP TABLE IF EXISTS study_data;') 
         console.log("Table dropped");
         //await conn.query(`CREATE TABLE study_data AS SELECT * FROM read_json_auto('study_data.json');`);
         await conn.insertJSONFromPath("study_data.json", {
@@ -212,6 +222,43 @@ async function getAccession(accessionCode)
         console.log(error);
     }
 }
+
+//Converts JSON text into JavaScript value
+async function addToDatabase()
+{
+    let studyInfo = sessionStorage.getItem("studyData"); 
+
+    if(studyInfo == "" || !studyInfo)
+    {
+        alert("No study data to upload. Please enter accession code.");
+        return; 
+    }
+
+    try
+    {
+        let data = JSON.parse(studyInfo); 
+        console.log("Data parsed");
+
+        const response = await fetch("http://127.0.0.1:8000/submit", 
+        {
+            method: "POST",
+            headers: 
+            {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ dataframe: data })
+        });
+
+        const result = await response.json();
+        console.log(data);
+        //alert("Study data uploaded to database.");
+    }
+    catch(error)
+    {
+        console.log(error);
+    }
+}
+
 //==============Code for View CSV Tab=======================
 
 /*
