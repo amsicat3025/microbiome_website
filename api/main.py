@@ -67,11 +67,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# wait what was I using this for
 class AccessionCode(BaseModel):
     accession_code: str
 
 class DataFrame(BaseModel):
-    dataframe: str
+    dataframe: list[dict]
 
 """Used for accession code fetching using the public ENA API"""
 # Note: Should only be returning data
@@ -90,10 +91,10 @@ def fetch_accession(accession: str):
 # Status Code documentation: https://fastapi.tiangolo.com/advanced/response-change-status-code/
 # Sequence should be: Press "Upload to database" => Call run(accession) => do all that fun stuff => Write to database and not a csv
 @app.post("/submit")
-def submit(dataframe: str):
-    df = pd.DataFrame(dataframe.dict())
+def submit(data: DataFrame):
+    df = pd.DataFrame(data.dataframe)
     addToDatabase(df)
-    return {"status": "ok", "dataframe": dataframe}
+    return {"status": "ok"}
 
 # Debugger
 if __name__ == '__main__':

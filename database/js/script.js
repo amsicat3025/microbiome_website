@@ -250,7 +250,8 @@ async function addToDatabase()
         });
 
         const result = await response.json();
-        console.log(data);
+        
+        console.log(JSON.stringify(result, null, 2));
         //alert("Study data uploaded to database.");
     }
     catch(error)
