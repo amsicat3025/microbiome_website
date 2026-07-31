@@ -585,13 +585,18 @@ def run(accession_codes:str, fast=False):
 
     return df
     
-def createDataRow(df):
-    df.to_sql("micro_data",engine,if_exists="append",index=False)
+"""def createDataRow(df):
+    df.to_sql("micro_data",engine,if_exists="append",index=False)"""
 
 def addToDatabase(df):
     # Need to avoid duplicates being added
     # Convert JSON => df
     df.to_sql("micro_data",engine,if_exists="append",index=False)
+
+"""pd.read_sql documentation: https://pandas.pydata.org/docs/reference/api/pandas.read_sql.html"""
+def retrieveDatabase():
+    df = pd.read_sql("SELECT * FROM micro_data",engine)
+    return df.to_dict(orient="records")
 
 
 if __name__ == "__main__":

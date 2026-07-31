@@ -103,7 +103,7 @@ console.log("script loaded");
 //Function for hiding/showing tabs
 //Taken from here: https://www.w3schools.com/howto/howto_js_tabs.asp
 //Done by default at the start
-function openTab(evt, tabName)
+function openTab(event, tabName)
 {
     console.log("tab being opened");
     let i = 0;
@@ -123,7 +123,55 @@ function openTab(evt, tabName)
     }
 
     document.getElementById(tabName).style.display = "block";
-    evt.currentTarget.className += " active";
+    event.currentTarget.className += " active";
+}
+
+async function loadDatabase()
+{
+    try
+    {
+        const response = await fetch("http://127.0.0.1:8000/database");
+        console.log(response);
+
+        let result = await response.json();
+        console.log("Results " + result);
+
+        let dataStr = JSON.stringify(result.data);
+        console.log("Database converted to str");
+
+        const conn = await db.connect();
+        console.log("Database connected");
+
+        await db.registerFileText("database_info.json", dataStr);
+        console.log("Temp file created");
+
+        //Named as such after what the actual PostGreSQL database is named
+        //May change name later
+        await conn.query('DROP TABLE IF EXISTS micro_data;');
+        console.log("Dropped table if it already exists");
+
+        await conn.insertJSONFromPath("database_info.json", {
+            name: "micro_data",
+            schema: "main",
+            create: true
+        });
+        console.log("Table created/updated");
+        
+        let data_entries = await conn.query("SELECT * FROM micro_data;");
+        console.log("Table results fetched");
+        //Close database connection
+        await conn.close();
+        console.log("Successfully retrieved database"); 
+
+        //Display study data in tables
+        console.log("Displaying Database HTML now");
+        displayHTML(data_entries, "data_table_body", "data_header_row");
+        console.log("Database HTML successfully displayed");
+    }
+    catch(error)
+    {
+        console.log(error)
+    }
 }
 
 document.getElementById("defaultOpen").addEventListener("click", function(e) 
@@ -136,9 +184,11 @@ document.getElementById("csvTab").addEventListener("click", function(e)
     openTab(e, "view_csv");
 });
 
-document.getElementById("dataTab").addEventListener("click", function(e) 
+document.getElementById("dataTab").addEventListener("click", async(e) =>
 {
     openTab(e, "view_database");
+
+    await loadDatabase();
 });
 
 document.getElementById("defaultOpen").click();
