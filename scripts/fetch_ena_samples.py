@@ -7,6 +7,8 @@ import time
 import json
 import re
 import os
+import csv
+import io
 
 # imports for sql stuff
 import os
@@ -23,12 +25,19 @@ user = os.getenv("DB_USER")
 host = os.getenv("DB_HOST")
 port = os.getenv("DB_PORT")
 db = os.getenv("DB_NAME")
+study_num = 16566
+
+# Command to write to database:
+# /Library/PostgreSQL/18/bin/psql -U postgres -d microbiome_data -f "/Users/asicat/Documents/microbiome-knowledge-base/database/sql/createtable.sql" 
 
 # Command to test if this writes to the database:
 # /Library/PostgreSQL/18/bin/psql -U postgres -d microbiome_data -c "SELECT * FROM micro_data LIMIT 10;"
 
 # Command for dropping table (for debugging purposes)
 # /Library/PostgreSQL/18/bin/psql -U postgres -d microbiome_data -c "DROP TABLE micro_data;"
+
+# may be an issue when updating in regards to like future columns and all that stuff
+# but rn proof of concept (uploading db file) is more necessary
 
 engine = create_engine(f"postgresql://{user}:{password}@{host}:{port}/{db}")
 
@@ -599,5 +608,36 @@ def retrieveDatabase():
     return df.to_dict(orient="records")
 
 
+def createTSV():
+    df = pd.read_sql("SELECT * FROM micro_data",engine)
+    df = df.fillna("not provided")
+    tsv_data = df.to_csv(sep="\t", index=False)
+    return tsv_data
+
+# Qiita API Documentation: https://qiita.ucsd.edu/static/doc/html/dev/rest.html
+def uploadTSV():
+    tsv_data = createTSV()
+    try:
+        response = requests.patch(
+        f"https://qiita.ucsd.edu/api/v1/study/{study_num}/samples",
+        data=tsv_data)
+        print(response)
+        return response
+    except:
+        print("Failed to upload to Qiita")
+
+
+def testUpload():
+    tsv_data = createTSV()
+    response = requests.patch(
+    f"https://qiita.ucsd.edu/api/auth/whoami",
+    data=tsv_data,
+    headers={"Content-Type": "text/tab-separated-values"}
+    )
+    print("Status code:", response.status_code)
+    print("Response:", response.json())
+
+
 if __name__ == "__main__":
-    main()
+    #main()
+    testUpload()
