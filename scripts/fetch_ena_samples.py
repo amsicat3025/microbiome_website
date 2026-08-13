@@ -641,3 +641,7 @@ def testUpload():
 if __name__ == "__main__":
     #main()
     testUpload()
+    # see if redbiome gives any luck
+    # check barnacle - HSPC Server for the lab
+    # Barnacle > Qmounts which will get automatically uploaded to Qiita
+    # Need to get access to Barnacle through a training and whatnot

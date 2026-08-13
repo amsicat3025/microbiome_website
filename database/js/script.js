@@ -388,6 +388,7 @@ document.getElementById("custom_attribute_search_form").addEventListener("submit
     
     //Note: Will likely change name of this variable later
     let customAttributes = document.getElementById("customAttribute").value;
+    console.log("Custom attribute: " + customAttributes);
 
     //Test if string is empty
     if(customAttributes == "")
@@ -402,8 +403,10 @@ document.getElementById("custom_attribute_search_form").addEventListener("submit
 
     //Do not load filtered table if the database is empty/no file loaded
     //There is likely a more efficient way to do this
+    
     const data = await conn.query("SELECT COUNT(*) AS count FROM information_schema.tables WHERE table_name = 'micro_data'");
     let count = data.toArray()[0].count;
+    console.log("Count from information schema: " + count);
     if(count == 0)
     {
         alert("Please upload CSV file first.");
@@ -411,12 +414,12 @@ document.getElementById("custom_attribute_search_form").addEventListener("submit
         return;
     }
 
-
+    console.log("Creating search string");
     //Note: Need to error check for if they try to search and the table is empty
     //createSearchString dynamically builds the query string
-    let searchConditions = createSearchString(customAttribute.value);
+    let searchConditions = createSearchString(customAttributes);
     let query_string = "SELECT * FROM micro_data WHERE " + searchConditions;
-    
+    console.log("Query string: " + query_string);
     //Obtain rows from database table
     let result = await conn.query(query_string);
 
@@ -424,6 +427,8 @@ document.getElementById("custom_attribute_search_form").addEventListener("submit
     //This amount is determined from the entire database
     //Not just the limited results
     count = result.toArray().length;
+    console.log("Result length: " + count);
+
     document.getElementById("numberStudies").innerText = count;
     document.getElementById("search_results").style.display = "block";
     displayHTML(result, "micro_table_body", "header_row");
@@ -548,7 +553,7 @@ function displayHTML(result, tableName, headerName)
         //Inserts the HTML into the table
         bioBody.insertAdjacentHTML("beforeend", rowHTML);
     }
-    //toggleAllColumns();
+    toggleAllColumns();
 }
 
 /*
