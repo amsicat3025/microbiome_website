@@ -147,17 +147,17 @@ async function loadDatabase()
 
         //Named as such after what the actual PostGreSQL database is named
         //May change name later
-        await conn.query('DROP TABLE IF EXISTS micro_data;');
+        await conn.query('DROP TABLE IF EXISTS complete_database;');
         console.log("Dropped table if it already exists");
 
         await conn.insertJSONFromPath("database_info.json", {
-            name: "micro_data",
+            name: "complete_database",
             schema: "main",
             create: true
         });
         console.log("Table created/updated");
         
-        let data_entries = await conn.query("SELECT * FROM micro_data;");
+        let data_entries = await conn.query("SELECT * FROM complete_database;");
         console.log("Table results fetched");
         //Close database connection
         await conn.close();
@@ -385,9 +385,11 @@ document.getElementById("file_form").addEventListener("submit", async e => {
 document.getElementById("custom_attribute_search_form").addEventListener("submit", async(e) =>
 {
     e.preventDefault(); 
-    
+    console.log("Searching from CSV");
+
     //Note: Will likely change name of this variable later
     let customAttributes = document.getElementById("customAttribute").value;
+    let header = "header_row";
     console.log("Custom attribute: " + customAttributes);
 
     //Test if string is empty
@@ -414,11 +416,13 @@ document.getElementById("custom_attribute_search_form").addEventListener("submit
         return;
     }
 
+
     console.log("Creating search string");
     //Note: Need to error check for if they try to search and the table is empty
     //createSearchString dynamically builds the query string
-    let searchConditions = createSearchString(customAttributes);
+    let searchConditions = createSearchString(customAttributes, header);
     let query_string = "SELECT * FROM micro_data WHERE " + searchConditions;
+    
     console.log("Query string: " + query_string);
     //Obtain rows from database table
     let result = await conn.query(query_string);
@@ -437,6 +441,64 @@ document.getElementById("custom_attribute_search_form").addEventListener("submit
     await conn.close(); 
 })
 
+//Note: Has redundant code because it's not working if I try separating out at present
+document.getElementById("custom_attribute_search_form_database").addEventListener("submit", async(e) =>
+{
+    e.preventDefault(); 
+    console.log("Searching database");
+    
+    //Note: Will likely change name of this variable later
+    let customAttributes = document.getElementById("customAttributeData").value;
+    let header = "data_header_row";
+    console.log("Custom attribute: " + customAttributes);
+
+    //Test if string is empty
+    if(customAttributes == "")
+    {
+        console.log("Empty");
+        alert("Please enter a custom attribute to search for.");
+        return;
+    }
+
+    //Establish database connection
+    const conn = await db.connect();
+
+    //Do not load filtered table if the database is empty/no file loaded
+    //There is likely a more efficient way to do this
+    
+    const data = await conn.query("SELECT COUNT(*) AS count FROM information_schema.tables WHERE table_name = 'complete_database'");
+    let count = data.toArray()[0].count;
+    console.log("Count from information schema: " + count);
+    if(count == 0)
+    {
+        alert("Please add data to database.");
+        await conn.close();
+        return;
+    }
+
+    console.log("Creating search string");
+    //Note: Need to error check for if they try to search and the table is empty
+    //createSearchString dynamically builds the query string
+    let searchConditions = createSearchString(customAttributes, header);
+    let query_string = "SELECT * FROM complete_database WHERE " + searchConditions;
+    console.log("Query string: " + query_string);
+    //Obtain rows from database table
+    let result = await conn.query(query_string);
+
+    //Displays the number of results 
+    //This amount is determined from the entire database
+    //Not just the limited results
+    count = result.toArray().length;
+    console.log("Result length: " + count);
+
+    document.getElementById("numberStudiesData").innerText = count;
+    document.getElementById("search_results_data").style.display = "block";
+    displayHTML(result, "data_table_body", "data_header_row");
+
+    //Close database connection
+    await conn.close(); 
+})
+
 //Obtains column data 
 function getColumns(headerName)
 {
@@ -444,10 +506,10 @@ function getColumns(headerName)
 }
 
 //Dynamically creates query search string based on every column
-function createSearchString(searchAttribute)
+function createSearchString(searchAttribute, headerName)
 {
     let searchConditions = "";
-    const columns = getColumns();
+    const columns = getColumns(headerName);
 
     let len = columns.length;
 
