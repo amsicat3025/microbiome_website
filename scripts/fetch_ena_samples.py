@@ -600,6 +600,18 @@ def run(accession_codes:str, fast=False):
 def addToDatabase(df):
     # Need to avoid duplicates being added
     # Convert JSON => df
+    columns_order = [
+        'source_study', 'accession', 'alias', 'center_name', 'broker_name',
+        'title', 'taxon_id', 'scientific_name', 'common_name', 'description',
+        'bio_material', 'culture_collection', 'specimen_voucher', 'collected_by',
+        'collection_date', 'country', 'host', 'identified_by', 'isolation_source',
+        'lat_lon', 'lab_host', 'environmental_sample', 'mating_type', 'sex',
+        'cell_type', 'dev_stage', 'tissue_type', 'cultivar', 'ecotype',
+        'isolate', 'strain', 'sub_species', 'cell_line', 'serotype', 'serovar',
+        'custom_attributes'
+    ]
+
+    df = df.reindex(columns=columns_order)
     df.to_sql("micro_data",engine,if_exists="append",index=False)
 
 """pd.read_sql documentation: https://pandas.pydata.org/docs/reference/api/pandas.read_sql.html"""
