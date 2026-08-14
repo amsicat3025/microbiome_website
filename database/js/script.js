@@ -345,7 +345,7 @@ document.getElementById("file_form").addEventListener("submit", async e => {
         await conn.query(`CREATE TABLE IF NOT EXISTS micro_data AS SELECT * FROM 'microdata.csv';`);
 
         //Current limit is 100 rows
-        const result = await conn.query('SELECT * FROM micro_data LIMIT 100;');
+        const result = await conn.query('SELECT * FROM micro_data LIMIT 5;');
 
         //Displays the table data in HTML
         displayHTML(result, "micro_table_body", "header_row");
@@ -438,9 +438,9 @@ document.getElementById("custom_attribute_search_form").addEventListener("submit
 })
 
 //Obtains column data 
-function getColumns()
+function getColumns(headerName)
 {
-    return Array.from(document.querySelectorAll("#header_row th")).map(th => th.textContent.trim());
+    return Array.from(document.querySelectorAll("#" + headerName + " th")).map(th => th.textContent.trim());
 }
 
 //Dynamically creates query search string based on every column
@@ -572,17 +572,21 @@ function displayHTML(result, tableName, headerName)
     the csvs uploaded all follow the same format.
 
 */
-function elementToggle(checkbox_id, checkbox_name)
+function elementToggle(checkbox_id, checkbox_name, table, headerName)
 {
     //Generic function for each elementToggle
     //Documentation for checkbox: https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/checkbox
     document.getElementById(checkbox_id).addEventListener("change", function()
     {
         //Obtain column data
-        const columns = getColumns();
+        console.log("Header: " + headerName);
+        const columns = getColumns(headerName);
 
         //Obtain the name of a column
+        console.log("Checkbox name: " + checkbox_name);
         const index = columns.indexOf(checkbox_name); 
+
+        console.log("Checkbox index: " + index);
 
         //If column not found, alert the user and cancel function
         if(index == -1)
@@ -592,7 +596,8 @@ function elementToggle(checkbox_id, checkbox_name)
         }
 
         //Hides the given column's header
-        const header = document.querySelectorAll("#header_row th")[index];
+        //Note: style.visibility = "collapse" does properly hide it without crashing
+        const header = document.querySelectorAll("#" + headerName + " th")[index];
         if(this.checked)
         {
             header.style.display = "none";
@@ -603,8 +608,10 @@ function elementToggle(checkbox_id, checkbox_name)
         }
         
         //Loops through every row to hide the cells of the given column
-        const rows = document.querySelectorAll("#bio_table tbody tr");
+        const rows = document.querySelectorAll("#" + table + " tbody tr");
         const len = rows.length;
+        console.log("Table name: " + table);
+        console.log("Number of rows: " + len);
 
         for(let r = 0; r < len; ++r)
         {
@@ -630,28 +637,55 @@ function elementToggle(checkbox_id, checkbox_name)
 //Adds the ability to hide/show columns to every checkbox
 function toggleAllColumns()
 {
-    elementToggle("common_name_toggle", "common_name");
-    elementToggle("description_toggle", "description");
-    elementToggle("bio_material_toggle", "bio_material");
-    elementToggle("culture_collection_toggle", "culture_collection");
-    elementToggle("specimen_voucher_toggle", "specimen_voucher");
-    elementToggle("collected_by_toggle", "collected_by");
-    elementToggle("country_toggle", "country");
-    elementToggle("identified_by_toggle", "identified_by");
-    elementToggle("isolation_source_toggle", "isolation_source");
-    elementToggle("lat_lon_toggle", "lat_lon");
-    elementToggle("lab_host_toggle", "lab_host");
-    elementToggle("environmental_sample_toggle", "environmental_sample");
-    elementToggle("mating_type_toggle", "mating_type");
-    elementToggle("sex_toggle", "sex");
-    elementToggle("cell_type_toggle", "cell_type");
-    elementToggle("dev_stage_toggle", "dev_stage");
-    elementToggle("tissue_type_toggle", "tissue_type");
-    elementToggle("cultivar_toggle", "cultivar");
-    elementToggle("ecotype_toggle", "ecotype");
-    elementToggle("isolate_toggle", "isolate");
-    elementToggle("strain_toggle", "strain");
-    elementToggle("sub_species_toggle", "sub_species");
-    elementToggle("serotype_toggle", "serotype");
-    elementToggle("serovar_toggle", "serovar");
+    //For the View CSV tab
+    elementToggle("common_name_toggle", "common_name", "micro_table", "header_row");
+    elementToggle("description_toggle", "description", "micro_table", "header_row");
+    elementToggle("bio_material_toggle", "bio_material", "micro_table", "header_row");
+    elementToggle("culture_collection_toggle", "culture_collection", "micro_table", "header_row");
+    elementToggle("specimen_voucher_toggle", "specimen_voucher", "micro_table", "header_row");
+    elementToggle("collected_by_toggle", "collected_by", "micro_table_body", "header_row");
+    elementToggle("country_toggle", "country", "micro_table_body", "header_row");
+    elementToggle("identified_by_toggle", "identified_by", "micro_table_body", "header_row");
+    elementToggle("isolation_source_toggle", "isolation_source", "micro_table", "header_row");
+    elementToggle("lat_lon_toggle", "lat_lon", "micro_table", "header_row");
+    elementToggle("lab_host_toggle", "lab_host", "micro_table", "header_row");
+    elementToggle("environmental_sample_toggle", "environmental_sample", "micro_table", "header_row");
+    elementToggle("mating_type_toggle", "mating_type", "micro_table", "header_row");
+    elementToggle("sex_toggle", "sex", "micro_table", "header_row");
+    elementToggle("cell_type_toggle", "cell_type", "micro_table", "header_row");
+    elementToggle("dev_stage_toggle", "dev_stage", "micro_table", "header_row");
+    elementToggle("tissue_type_toggle", "tissue_type", "micro_table", "header_row");
+    elementToggle("cultivar_toggle", "cultivar", "micro_table", "header_row");
+    elementToggle("ecotype_toggle", "ecotype", "micro_table", "header_row");
+    elementToggle("isolate_toggle", "isolate", "micro_table", "header_row");
+    elementToggle("strain_toggle", "strain", "micro_table", "header_row");
+    elementToggle("sub_species_toggle", "sub_species", "micro_table", "header_row");
+    elementToggle("serotype_toggle", "serotype", "micro_table", "header_row");
+    elementToggle("serovar_toggle", "serovar", "micro_table", "header_row");
+    
+    //For the View Database tab
+    elementToggle("common_name_data_toggle", "common_name", "data_table", "data_header_row");
+    elementToggle("description_data_toggle", "description", "data_table", "data_header_row");
+    elementToggle("bio_material_data_toggle", "bio_material", "data_table", "data_header_row");
+    elementToggle("culture_collection_data_toggle", "culture_collection", "data_table", "data_header_row");
+    elementToggle("specimen_voucher_data_toggle", "specimen_voucher", "data_table", "data_header_row");
+    elementToggle("collected_by_data_toggle", "collected_by", "data_table", "data_header_row");
+    elementToggle("country_data_toggle", "country", "data_table", "data_header_row");
+    elementToggle("identified_by_data_toggle", "identified_by", "data_table", "data_header_row");
+    elementToggle("isolation_source_data_toggle", "isolation_source", "data_table", "data_header_row");
+    elementToggle("lat_lon_data_toggle", "lat_lon", "data_table", "data_header_row");
+    elementToggle("lab_host_data_toggle", "lab_host", "data_table", "data_header_row");
+    elementToggle("environmental_sample_data_toggle", "environmental_sample", "data_table", "data_header_row");
+    elementToggle("mating_type_data_toggle", "mating_type", "data_table", "data_header_row");
+    elementToggle("sex_data_toggle", "sex", "data_table", "data_header_row");
+    elementToggle("cell_type_data_toggle", "cell_type", "data_table", "data_header_row");
+    elementToggle("dev_stage_data_toggle", "dev_stage", "data_table", "data_header_row");
+    elementToggle("tissue_type_data_toggle", "tissue_type", "data_table", "data_header_row");
+    elementToggle("cultivar_data_toggle", "cultivar", "data_table", "data_header_row");
+    elementToggle("ecotype_data_toggle", "ecotype", "data_table", "data_header_row");
+    elementToggle("isolate_data_toggle", "isolate", "data_table", "data_header_row");
+    elementToggle("strain_data_toggle", "strain", "data_table", "data_header_row");
+    elementToggle("sub_species_data_toggle", "sub_species", "data_table", "data_header_row");
+    elementToggle("serotype_data_toggle", "serotype", "data_table", "data_header_row");
+    elementToggle("serovar_data_toggle", "serovar", "data_table", "data_header_row");
 }
