@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS micro_data;
 
 CREATE TABLE IF NOT EXISTS micro_data (
     source_study TEXT NOT NULL,
-    accession TEXT NOT NULL,
+    accession TEXT NOT NULL UNIQUE,
     alias TEXT NOT NULL,
     center_name TEXT NOT NULL,
     broker_name TEXT,

@@ -157,7 +157,15 @@ async function loadDatabase()
         });
         console.log("Table created/updated");
         
-        let data_entries = await conn.query("SELECT * FROM complete_database;");
+        //Done because columns are not popping up in the right order
+        let data_entries = await conn.query("SELECT source_study, accession, alias, center_name, " + 
+            "broker_name, title, taxon_id, scientific_name, common_name, description," + 
+            "bio_material, culture_collection, specimen_voucher, collected_by," + 
+            "collection_date, country, host, identified_by, isolation_source," + 
+            "lat_lon, lab_host, environmental_sample, mating_type, sex," + 
+            "cell_type, dev_stage, tissue_type, cultivar, ecotype," + 
+            "isolate, strain, sub_species, cell_line, serotype, serovar," +
+            "custom_attributes FROM complete_database;");
         console.log("Table results fetched");
         //Close database connection
         await conn.close();
