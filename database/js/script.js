@@ -262,8 +262,16 @@ async function getAccession(accessionCode)
         });
         console.log("Table created");
         
-        let study_results = await conn.query("SELECT * FROM study_data;");
+        let study_results = await conn.query("SELECT source_study, accession, alias, center_name, " + 
+            "broker_name, title, taxon_id, scientific_name, common_name, description," + 
+            "bio_material, culture_collection, specimen_voucher, collected_by," + 
+            "collection_date, country, host, identified_by, isolation_source," + 
+            "lat_lon, lab_host, environmental_sample, mating_type, sex," + 
+            "cell_type, dev_stage, tissue_type, cultivar, ecotype," + 
+            "isolate, strain, sub_species, cell_line, serotype, serovar," +
+            "custom_attributes FROM study_data;");
         console.log("Table results fetched");
+
         //Close database connection
         await conn.close();
         console.log("Successfully uploaded database"); 
@@ -353,7 +361,14 @@ document.getElementById("file_form").addEventListener("submit", async e => {
         await conn.query(`CREATE TABLE IF NOT EXISTS micro_data AS SELECT * FROM 'microdata.csv';`);
 
         //Current limit is 100 rows
-        const result = await conn.query('SELECT * FROM micro_data LIMIT 5;');
+        const result = await conn.query("SELECT source_study, accession, alias, center_name, " + 
+            "broker_name, title, taxon_id, scientific_name, common_name, description," + 
+            "bio_material, culture_collection, specimen_voucher, collected_by," + 
+            "collection_date, country, host, identified_by, isolation_source," + 
+            "lat_lon, lab_host, environmental_sample, mating_type, sex," + 
+            "cell_type, dev_stage, tissue_type, cultivar, ecotype," + 
+            "isolate, strain, sub_species, cell_line, serotype, serovar," +
+            "custom_attributes FROM micro_data LIMIT 5;");
 
         //Displays the table data in HTML
         displayHTML(result, "micro_table_body", "header_row");
@@ -429,7 +444,14 @@ document.getElementById("custom_attribute_search_form").addEventListener("submit
     //Note: Need to error check for if they try to search and the table is empty
     //createSearchString dynamically builds the query string
     let searchConditions = createSearchString(customAttributes, header);
-    let query_string = "SELECT * FROM micro_data WHERE " + searchConditions;
+    let query_string = "SELECT source_study, accession, alias, center_name, " + 
+            "broker_name, title, taxon_id, scientific_name, common_name, description," + 
+            "bio_material, culture_collection, specimen_voucher, collected_by," + 
+            "collection_date, country, host, identified_by, isolation_source," + 
+            "lat_lon, lab_host, environmental_sample, mating_type, sex," + 
+            "cell_type, dev_stage, tissue_type, cultivar, ecotype," + 
+            "isolate, strain, sub_species, cell_line, serotype, serovar," +
+            "custom_attributesFROM micro_data WHERE " + searchConditions;
     
     console.log("Query string: " + query_string);
     //Obtain rows from database table
@@ -488,7 +510,14 @@ document.getElementById("custom_attribute_search_form_database").addEventListene
     //Note: Need to error check for if they try to search and the table is empty
     //createSearchString dynamically builds the query string
     let searchConditions = createSearchString(customAttributes, header);
-    let query_string = "SELECT * FROM complete_database WHERE " + searchConditions;
+    let query_string = "SELECT source_study, accession, alias, center_name, " + 
+            "broker_name, title, taxon_id, scientific_name, common_name, description," + 
+            "bio_material, culture_collection, specimen_voucher, collected_by," + 
+            "collection_date, country, host, identified_by, isolation_source," + 
+            "lat_lon, lab_host, environmental_sample, mating_type, sex," + 
+            "cell_type, dev_stage, tissue_type, cultivar, ecotype," + 
+            "isolate, strain, sub_species, cell_line, serotype, serovar," +
+            "custom_attributes FROM complete_database WHERE " + searchConditions;
     console.log("Query string: " + query_string);
     //Obtain rows from database table
     let result = await conn.query(query_string);
