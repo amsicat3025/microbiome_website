@@ -137,6 +137,8 @@ async function loadDatabase()
         console.log("Results " + result);
 
         let dataStr = JSON.stringify(result.data);
+        sessionStorage.setItem("databaseInfo", dataStr);
+        
         console.log("Database converted to str");
 
         const conn = await db.connect();
@@ -828,3 +830,43 @@ function toggleAllColumns()
     elementToggle("serotype_data_toggle", "serotype", "data_table", "data_header_row");
     elementToggle("serovar_data_toggle", "serovar", "data_table", "data_header_row");
 }
+
+/* Code for View Database */
+document.getElementById("database_csv_download").addEventListener("click", async(e) =>
+{
+    e.preventDefault();
+    console.log("Downloading database as CSV file");
+
+    let studyInfo = sessionStorage.getItem("databaseInfo"); 
+
+    if(studyInfo == "" || !studyInfo)
+    {
+        alert("No database table to download as CSV. Please add to the database.");
+        return; 
+    }
+
+    try
+    {
+        let data = JSON.parse(studyInfo); 
+        console.log("Data parsed");
+
+        const response = await fetch("http://127.0.0.1:8000/download", 
+        {
+            method: "POST",
+            headers: 
+            {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ dataframe: data })
+        });
+
+        const result = await response.json();
+        
+        console.log(JSON.stringify(result, null, 2));
+        //alert("Study data uploaded to database.");
+    }
+    catch(error)
+    {
+        console.log(error);
+    }
+});
