@@ -262,14 +262,15 @@ async function getAccession(accessionCode)
         });
         console.log("Table created");
         
-        let study_results = await conn.query("SELECT source_study, accession, alias, center_name, " + 
+        /*let study_results = await conn.query("SELECT source_study, accession, alias, center_name, " + 
             "broker_name, title, taxon_id, scientific_name, common_name, description," + 
             "bio_material, culture_collection, specimen_voucher, collected_by," + 
             "collection_date, country, host, identified_by, isolation_source," + 
             "lat_lon, lab_host, environmental_sample, mating_type, sex," + 
             "cell_type, dev_stage, tissue_type, cultivar, ecotype," + 
             "isolate, strain, sub_species, cell_line, serotype, serovar," +
-            "custom_attributes FROM study_data;");
+            "custom_attributes FROM study_data;");*/
+        let study_results = await conn.query("SELECT * FROM study_data");
         console.log("Table results fetched");
 
         //Close database connection
@@ -325,6 +326,45 @@ async function addToDatabase()
         console.log(error);
     }
 }
+
+document.getElementById("study_csv_download").addEventListener("click", async(e) =>
+{
+    e.preventDefault();
+    console.log("Downloading as CSV file");
+
+    let studyInfo = sessionStorage.getItem("studyData"); 
+
+    if(studyInfo == "" || !studyInfo)
+    {
+        alert("No study data to download as CSV. Please enter accession code.");
+        return; 
+    }
+
+    try
+    {
+        let data = JSON.parse(studyInfo); 
+        console.log("Data parsed");
+
+        const response = await fetch("http://127.0.0.1:8000/download", 
+        {
+            method: "POST",
+            headers: 
+            {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ dataframe: data })
+        });
+
+        const result = await response.json();
+        
+        console.log(JSON.stringify(result, null, 2));
+        //alert("Study data uploaded to database.");
+    }
+    catch(error)
+    {
+        console.log(error);
+    }
+});
 
 //==============Code for View CSV Tab=======================
 

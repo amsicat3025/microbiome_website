@@ -9,6 +9,8 @@ import re
 import os
 import csv
 import io
+from pathlib import Path
+from datetime import datetime
 
 # imports for sql stuff
 import os
@@ -631,6 +633,12 @@ def retrieveDatabase():
     print(df)
     return df.to_dict(orient="records")
 
+def downloadCSV(df):
+    downloads = Path.home() / 'Downloads'
+    time = datetime.now()
+    out_path = downloads / f'studydata{time}.csv'
+    df.to_csv(out_path, index=False)
+
 
 def createTSV():
     df = pd.read_sql("SELECT * FROM micro_data",engine)
@@ -660,9 +668,6 @@ def testUpload():
     )
     print("Status code:", response.status_code)
     print("Response:", response.json())
-
-def downloadCSV(df):
-    df.to_csv(out_path, index=False)
 
 
 if __name__ == "__main__":

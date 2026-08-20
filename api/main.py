@@ -34,7 +34,7 @@
    """
 from fastapi import FastAPI
 from ena_accessor import fetch
-from scripts.fetch_ena_samples import run, addToDatabase, retrieveDatabase, createTSV # note: immensely janky right now
+from scripts.fetch_ena_samples import run, addToDatabase, retrieveDatabase, downloadCSV, createTSV # note: immensely janky right now
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
@@ -96,6 +96,13 @@ def submit(data: DataFrame):
     addToDatabase(df)
     tsv_data = createTSV()
     return {"status": "ok", "tsv_data": tsv_data}
+
+@app.post("/download")
+def download(data: DataFrame):
+    df = pd.DataFrame(data.dataframe)
+    downloadCSV(df)
+    return {"status": "ok"}
+
 
 """Used for pulling up database information"""
 @app.get("/database")
