@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# Effectively I need to feed the results of fetch_ena_samples into here, 
+# even if MMC is a different dataset
+# Unless they are all ENA all along actually and I've been operating under the wrong assumption
+# But the new MMC2 files have a different organization system and different records, so I need 
+# some way to reconcile the two
+
 """
 classify_ena_samples.py
 =======================

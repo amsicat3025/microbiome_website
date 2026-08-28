@@ -14,6 +14,8 @@
     - Add built database to Google Sheets
     - Without user loading Google Sheet/figure out how to do it wihtout it crashing
     - PostGreSQL go brrr (local storage?)
+    - Some sort of read/write/review thing
+    - Add somewhere where like these updated rows can be added but also edited if need be
     
     **Visual/HTML Side**
     - Two tabs: 
@@ -21,7 +23,7 @@
       2) Actually viewing said database (without uploading CSV file)
       3) Alternatively we could just. Add said CSV file TO the PostGreSQL database
     - Alter/bugfix checkboxes such that non-vital columns can be hidden initially and 
-      voluntarily be displayed
+      voluntarily be displayed (halfway)
     - Add visual indicator to show why certain table rows were pulled up for custom search
     - Add loader to indicate to user when their local table display is being updated
     - Improve table visibility/readability; currently rather squished (medium priority)
@@ -31,6 +33,7 @@
     - Vertical table scrollbar (low priority)
     - Improve loading efficiency of visual elements (low priority)
     - Make graphics more visually appealing (low priority)
+    - Add more means of sorting (e.g. by reviewer, sequencing type, diseased)
 
     For first tab: Add option to continually keep pulling up studies and then exporting to CSV
     and/or uploading to database
@@ -136,8 +139,16 @@ async function loadDatabase()
         let result = await response.json();
         console.log("Results " + result);
 
+        console.log("Result data: " + result.data);
+
         let dataStr = JSON.stringify(result.data);
+        if(dataStr == "")
+        {
+            console.log("dataStr empty");
+            return;
+        }
         sessionStorage.setItem("databaseInfo", dataStr);
+        console.log("Session storage set");
 
         console.log("Database converted to str");
 
@@ -167,7 +178,14 @@ async function loadDatabase()
             "lat_lon, lab_host, environmental_sample, mating_type, sex," + 
             "cell_type, dev_stage, tissue_type, cultivar, ecotype," + 
             "isolate, strain, sub_species, cell_line, serotype, serovar," +
-            "custom_attributes FROM complete_database;");
+            "custom_attributes," + 
+            "tier, review_reason, year_reviewed, journal, n_samples," + 
+            "repository_link, paper_link, disease_evidence, disease_present," + 
+            "disease_from_names, age_present, sex_present, antibiotic_present," +
+            "geography_present, body_site_group, sequencing_type, disease_group," +
+            "age_key, sex_key, disease_key, reviewer, reviewer_agrees, reviewer_notes" +
+            " FROM complete_database");
+            
         console.log("Table results fetched");
         //Close database connection
         await conn.close();
@@ -299,6 +317,7 @@ async function addToDatabase()
 
     if(studyInfo == "" || !studyInfo)
     {
+        print("Study info empty");
         alert("No study data to upload. Please enter accession code.");
         return; 
     }
@@ -328,7 +347,7 @@ async function addToDatabase()
         console.log(error);
     }
 
-    loadDatabase();
+    await loadDatabase();
 }
 
 document.getElementById("study_csv_download").addEventListener("click", async(e) =>
@@ -561,7 +580,13 @@ document.getElementById("custom_attribute_search_form_database").addEventListene
             "lat_lon, lab_host, environmental_sample, mating_type, sex," + 
             "cell_type, dev_stage, tissue_type, cultivar, ecotype," + 
             "isolate, strain, sub_species, cell_line, serotype, serovar," +
-            "custom_attributes FROM complete_database WHERE " + searchConditions;
+            "custom_attributes," + 
+            "tier, review_reason, year_reviewed, journal, n_samples," + 
+            "repository_link, paper_link, disease_evidence, disease_present," + 
+            "disease_from_names, age_present, sex_present, antibiotic_present," +
+            "geography_present, body_site_group, sequencing_type, disease_group," +
+            "age_key, sex_key, disease_key, reviewer, reviewer_agrees, reviewer_notes" +
+            " FROM complete_database WHERE " + searchConditions;
     console.log("Query string: " + query_string);
     //Obtain rows from database table
     let result = await conn.query(query_string);

@@ -16,7 +16,7 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 import urllib.parse
-from sqlalchemy import create_engine # need this to run 
+from sqlalchemy import create_engine, inspect # need this to run 
 
 # For security purposes, creates database and links to it
 # Documentation HERE: https://www.geeksforgeeks.org/python/connecting-postgresql-with-sqlalchemy-in-python/
@@ -41,7 +41,24 @@ study_num = 16566
 # may be an issue when updating in regards to like future columns and all that stuff
 # but rn proof of concept (uploading db file) is more necessary
 
+# Make something similar for MMC / other datasets
+# Need metadata file
+
+# for MMC in particular:
+# ok here are the "finished" files. I still am finalizing the tiers but for tier 1s and 2s 
+# if reviewer agrees says Yes we can use them and the disease_key or reviewer_notes 
+# will have info on what ENA field delineates disease. In the tier3 file if reviewer agrees 
+# is No then that study has disease info which should be in disease key or reviewer notes. 
+# Sorry I know this is alot so please lemme know if you have questions.
+
+# Anyway my prevailing assumption is that we will manually be adding in
+# Tiers, reviewer, year (reviewed; ask about that), reviewer_agrees, reviewer_notes 
+# will be added in manually
+# since it can't be pulled from the site data
+# therefore the columns still exist they're just null
+# But also for the disease aspect it's also kind of null...?
 engine = create_engine(f"postgresql://{user}:{password}@{host}:{port}/{db}")
+inspector = inspect(engine)
 
 # Base URL
 BASE_URL_BROWSER = "https://www.ebi.ac.uk/ena/browser/api"
@@ -602,7 +619,8 @@ def run(accession_codes:str, fast=False):
 def addToDatabase(df):
     # Need to avoid duplicates being added
     # Convert JSON => df
-    columns_order = [
+    if((inspector.has_table("micro_data"))):
+        columns_order = [
         'source_study', 'accession', 'alias', 'center_name', 'broker_name',
         'title', 'taxon_id', 'scientific_name', 'common_name', 'description',
         'bio_material', 'culture_collection', 'specimen_voucher', 'collected_by',
@@ -610,14 +628,41 @@ def addToDatabase(df):
         'lat_lon', 'lab_host', 'environmental_sample', 'mating_type', 'sex',
         'cell_type', 'dev_stage', 'tissue_type', 'cultivar', 'ecotype',
         'isolate', 'strain', 'sub_species', 'cell_line', 'serotype', 'serovar',
-        'custom_attributes'
-    ]
+        'custom_attributes',
+        'tier', 'review_reason', 'year_reviewed', 'journal', 'n_samples',
+        'repository_link', 'paper_link', 'disease_evidence', 'disease_present',
+        'disease_from_names', 'age_present', 'sex_present', 'antibiotic_present',
+        'geography_present', 'body_site_group', 'sequencing_type', 'disease_group',
+        'age_key', 'sex_key', 'disease_key', 'reviewer', 'reviewer_agrees', 'reviewer_notes'
+        ]
 
-    df = df.reindex(columns=columns_order)
-    df.to_sql("micro_data",engine,if_exists="append",index=False)
+        df = df.reindex(columns=columns_order)
+        df.to_sql("micro_data",engine,if_exists="append",index=False)
 
 """pd.read_sql documentation: https://pandas.pydata.org/docs/reference/api/pandas.read_sql.html"""
 def retrieveDatabase():
+    """if(inspector.has_table("micro_data")):
+        columns_order = [
+            'source_study', 'accession', 'alias', 'center_name', 'broker_name',
+            'title', 'taxon_id', 'scientific_name', 'common_name', 'description',
+            'bio_material', 'culture_collection', 'specimen_voucher', 'collected_by',
+            'collection_date', 'country', 'host', 'identified_by', 'isolation_source',
+            'lat_lon', 'lab_host', 'environmental_sample', 'mating_type', 'sex',
+            'cell_type', 'dev_stage', 'tissue_type', 'cultivar', 'ecotype',
+            'isolate', 'strain', 'sub_species', 'cell_line', 'serotype', 'serovar',
+            'custom_attributes',
+            'tier', 'review_reason', 'year_reviewed', 'journal', 'n_samples',
+            'repository_link', 'paper_link', 'disease_evidence', 'disease_present',
+            'disease_from_names', 'age_present', 'sex_present', 'antibiotic_present',
+            'geography_present', 'body_site_group', 'sequencing_type', 'disease_group',
+            'age_key', 'sex_key', 'disease_key', 'reviewer', 'reviewer_agrees', 'reviewer_notes'
+        ]
+        df = pd.read_sql("SELECT * FROM micro_data",engine)
+        df = df.reindex(columns=columns_order)
+        print(df)
+        return df.to_dict(orient="records")
+    else:
+        return []"""
     columns_order = [
             'source_study', 'accession', 'alias', 'center_name', 'broker_name',
             'title', 'taxon_id', 'scientific_name', 'common_name', 'description',
@@ -626,14 +671,20 @@ def retrieveDatabase():
             'lat_lon', 'lab_host', 'environmental_sample', 'mating_type', 'sex',
             'cell_type', 'dev_stage', 'tissue_type', 'cultivar', 'ecotype',
             'isolate', 'strain', 'sub_species', 'cell_line', 'serotype', 'serovar',
-            'custom_attributes'
-    ]
+            'custom_attributes',
+            'tier', 'review_reason', 'year_reviewed', 'journal', 'n_samples',
+            'repository_link', 'paper_link', 'disease_evidence', 'disease_present',
+            'disease_from_names', 'age_present', 'sex_present', 'antibiotic_present',
+            'geography_present', 'body_site_group', 'sequencing_type', 'disease_group',
+            'age_key', 'sex_key', 'disease_key', 'reviewer', 'reviewer_agrees', 'reviewer_notes'
+        ]
     df = pd.read_sql("SELECT * FROM micro_data",engine)
     df = df.reindex(columns=columns_order)
     print(df)
     return df.to_dict(orient="records")
 
 def downloadCSV(df):
+    # figure out a better way to name files
     downloads = Path.home() / 'Downloads'
     time = datetime.now()
     out_path = downloads / f'studydata{time}.csv'
@@ -641,10 +692,12 @@ def downloadCSV(df):
 
 
 def createTSV():
-    df = pd.read_sql("SELECT * FROM micro_data",engine)
-    df = df.fillna("not provided")
-    tsv_data = df.to_csv(sep="\t", index=False)
-    return tsv_data
+    if(inspector.has_table("micro_data")):
+        df = pd.read_sql("SELECT * FROM micro_data",engine)
+        df = df.fillna("not provided")
+        tsv_data = df.to_csv(sep="\t", index=False)
+        return tsv_data
+    return 
 
 # Qiita API Documentation: https://qiita.ucsd.edu/static/doc/html/dev/rest.html
 def uploadTSV():

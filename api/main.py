@@ -94,8 +94,8 @@ def fetch_accession(accession: str):
 def submit(data: DataFrame):
     df = pd.DataFrame(data.dataframe)
     addToDatabase(df)
-    tsv_data = createTSV()
-    return {"status": "ok", "tsv_data": tsv_data}
+    # tsv_data = createTSV()
+    return {"status": "ok"}
 
 @app.post("/download")
 def download(data: DataFrame):
