@@ -175,6 +175,9 @@ Stage 2 is a transparent heuristic over inconsistently-annotated public metadata
 not paper-level ground truth. Use `classification_evidence` to audit, and tune
 the rule tables for your dataset.
 
+##Acknowledgements
+The AI tool ZotGPT (utilizing Anthropic Claude Sonnet 4.6) was exclusively used to assist with syntax debugging, HTML formatting, and brainstorming for HTML features. The authors remain fully responsible for the final web code and its deployment.
+
 # Contributions
 This work could not have been done without the help of Dr. Sam Degregori at the Knight Lab and his team's work to prepare studies for duty scraping. 
 
