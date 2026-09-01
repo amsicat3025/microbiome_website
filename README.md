@@ -20,12 +20,19 @@ This project requires:
 - Python 3.8+
 - `pip install -r requirements.txt`  (pandas, requests, numpy)
 - Network access to ENA (https://www.ebi.ac.uk/ena).
+- pgadmin4
+- FastAPI
+- sqlalchemy
+- [More installations to be added later]
 
 # Data
 All data used for this project comes from the European Nucleotide Archive (ENA) and PubMed. 
 
 # Directory Structure
 ```
+api/
+  ena_accessor.py
+  main.py
 database/
   css/
     style.css
@@ -164,6 +171,40 @@ pip install -r requirements.txt
 python fetch_ena_samples.py --accession-codes PRJEB11419 PRJNA545312
 python classify_ena_samples.py "*_samples.csv" -o out/classified.csv --compress zip
 ```
+
+## How to Run Webpage (TO BE UPDATED):
+In order to run/host the webpage, you must first do several things:
+1) Download and follow the set-up instructions for pgadmin4, seen here: https://www.pgadmin.org/download/. Enable the default settings and select the following add-ons: 
+2) Create a database called microbiome_data. The names of databases and tables may be adjusted for readability later on. 
+3) Create a .env file with the following properties:
+   ```
+   DB_PASSWORD=[YOUR PASSWORD]
+   DB_USER=postgres
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=microbiome_data
+   ```
+   This will be used to access the database information locally.
+5) In the terminal command line, input the following command: /Library/PostgreSQL/18/bin/psql -U postgres -d microbiome_data -f "[PATH TO createtable.sql file]". This will provide the basis for the database that will be added to. 
+6) In the terminal command line, input the following command. PYTHONPATH=. fastapi dev api/main.py. This will allow the API to run so that ENA data and the microbiome_data database can be queried, without overloading the user's computer.
+7) Open up the page website.html. If you're running this on VS Code Live Server, disable the live part and let it run.
+8) There are three tabs: Access Data, View CSV, and View Database.
+    ```
+    Access Data
+    Allows user to input an accession code and obtain basic study information about the studies that fall under it. These studies can be searched and their non-vital columns filtered.
+    There is also an option to save these studies to the database (error-checking and duplicate checking in-progress) or download them as a separate CSV.
+    ```
+
+    ```
+    View CSV
+    Allows the user to upload a CSV file containing study data and query it. The option to add this to the database will be updated. The user can also download this as another CSV file.
+    ```
+
+    ```
+    View Database
+    Allows the user to view the entire database. The user can then filter and query data. They can also download the information as a CSV. The user can also view the database by inputting the following command in the command line: /Library/PostgreSQL/18/bin/psql -U postgres -d microbiome_data -c "SELECT * FROM micro_data;"
+    ```
+10) MORE TO BE ADDED AS HOSTING BECOMES UPDATED
 
 ## A note on data
 The CSVs (fetched and classified) are large and are git-ignored on purpose —
