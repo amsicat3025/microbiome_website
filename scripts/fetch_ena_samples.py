@@ -53,10 +53,20 @@ study_num = 16566
 
 # Anyway my prevailing assumption is that we will manually be adding in
 # Tiers, reviewer, year (reviewed; ask about that), reviewer_agrees, reviewer_notes 
-# will be added in manually
+# will be added in manually, since it's not in the journals by default
 # since it can't be pulled from the site data
 # therefore the columns still exist they're just null
 # But also for the disease aspect it's also kind of null...?
+
+# Ask about editable columns and when Barnacle access will come since August is almost over
+# Rob will be back on Monday 
+# Better to add an "upload to TSV/CSV"
+# And no I really can't add anythng without the other stuff rip
+# PCOA only wants disease groups
+# Actual disease will be more for finetuning stuff
+# And naturally it's like anti-ai
+# Ask about the AI statement for like... code debugging/how to do X
+
 engine = create_engine(f"postgresql://{user}:{password}@{host}:{port}/{db}")
 inspector = inspect(engine)
 
