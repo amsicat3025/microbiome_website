@@ -4,26 +4,14 @@
 
     TO-DO:
     **Database Side**
-    - Utilize DuckDB and some form of SQL Database in tandem for local hosting
-    - Implement fulltext search for better time/memory efficiency
-    - Improve query efficency
+    - Implement fulltext search for better time/memory efficiency (medium-low priority)
+    - Improve query efficency (low priority)
     - Sort table by given specifications (medium priority)
-    - Add upload to Cloud option
-    - SRA-Explorer
-    - MMC2 as a Google Sheet that queries for API data
-    - Add built database to Google Sheets
-    - Without user loading Google Sheet/figure out how to do it wihtout it crashing
-    - PostGreSQL go brrr (local storage?)
-    - Some sort of read/write/review thing
+    - Some sort of read/write/review thing (low priority)
     - Add somewhere where like these updated rows can be added but also edited if need be
+    - Fix search on Database Side (high priority)
     
     **Visual/HTML Side**
-    - Two tabs: 
-      1) One for looking up studies via accession code and then uploading it to the database
-      2) Actually viewing said database (without uploading CSV file)
-      3) Alternatively we could just. Add said CSV file TO the PostGreSQL database
-    - Alter/bugfix checkboxes such that non-vital columns can be hidden initially and 
-      voluntarily be displayed (halfway)
     - Add visual indicator to show why certain table rows were pulled up for custom search
     - Add loader to indicate to user when their local table display is being updated
     - Improve table visibility/readability; currently rather squished (medium priority)
@@ -37,17 +25,6 @@
 
     For first tab: Add option to continually keep pulling up studies and then exporting to CSV
     and/or uploading to database
-
-    Actually, for the "Access study tab", add it to a duck_db database (temporary)
-    which will then display it in the current table
-    when you click "add to database"
-
-    It then takes the CSV function and adds it to the table IF it exists
-
-    Each row has a button for "adding to the database"
-    And a color indicator if it's already in the database
-    And there is an option to bulk add it
-    With some error messages about skipping duplicates and such
 
     **Miscellaneous**
     - Error handling for database/HTML sides
@@ -77,32 +54,6 @@ const form = document.querySelector("form");
 
 console.log("script loaded");
 
-/*document.addEventListener("DOMContentLoaded", function() {
-    const alreadyActive = document.querySelector(".tablinks.active");
-    if (!alreadyActive) {
-        document.getElementById("defaultOpen").click();
-    }
-
-    console.log("DOM ready");
-
-    const form = document.getElementById("accession_search_form");
-    console.log("form found:", form);
-
-    if (form) 
-    {
-        form.addEventListener("submit", async(e) => {
-            console.log("submit fired");
-            e.preventDefault();
-            const accessionCode = document.getElementById("accessionCodeSearch").value;
-            await getAccession(accessionCode);
-        });
-    } 
-    else 
-    {
-        console.error("Form not found — ID mismatch");
-    }
-});*/
-
 //Function for hiding/showing tabs
 //Taken from here: https://www.w3schools.com/howto/howto_js_tabs.asp
 //Done by default at the start
@@ -129,6 +80,7 @@ function openTab(event, tabName)
     event.currentTarget.className += " active";
 }
 
+/* This function loads the database */
 async function loadDatabase()
 {
     try
@@ -170,7 +122,8 @@ async function loadDatabase()
         });
         console.log("Table created/updated");
         
-        //Done because columns are not popping up in the right order
+        //Selects all of the columns in the database. Currently inconsistent with other SELECT statements
+        //because the columns aren't showing up in the right order. 
         let data_entries = await conn.query("SELECT source_study, accession, alias, center_name, " + 
             "broker_name, title, taxon_id, scientific_name, common_name, description," + 
             "bio_material, culture_collection, specimen_voucher, collected_by," + 
@@ -202,6 +155,7 @@ async function loadDatabase()
     }
 }
 
+//Switches tabs
 document.getElementById("defaultOpen").addEventListener("click", function(e) 
 {
     openTab(e, "access_data");
@@ -224,6 +178,7 @@ document.getElementById("defaultOpen").click();
 //Note to self: Ask if we want to keep the data persistent/backside later
 
 //==============Code for Access Data Tab====================
+//Calls getAccession to sift through all accession code stuff
 document.getElementById("accession_search_form").addEventListener("submit", async(e) =>
 {
     e.preventDefault();
@@ -234,6 +189,7 @@ document.getElementById("accession_search_form").addEventListener("submit", asyn
 
 });
 
+//Adds accession data to database
 document.getElementById("database_save").addEventListener("click", async(e) =>
 {
     e.preventDefault();
@@ -245,6 +201,17 @@ document.getElementById("database_save").addEventListener("click", async(e) =>
 //Documentation HERE: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
 //DuckDB Documentation: https://duckdb.org/docs/lts/data/json/loading_json
 //DuckDB JSON from Path Documentation: https://shell.duckdb.org/docs/classes/index.DuckDBConnection.html#insertjsonfrompath
+
+/* Obtains study data from a particular accession code.
+
+   It passes in the accession code to the API, which calls fetch in main.py.
+   If successful, it will return the study data in the form of a dictionary
+   and save it in sessionStorage so it can be added to the database later. 
+
+   If it fails, there will be an error message (recovery for this hasn't been implemented yet)
+
+   The study data will then be loaded into a local DuckDB database.
+*/
 async function getAccession(accessionCode)
 {
     try
@@ -310,7 +277,16 @@ async function getAccession(accessionCode)
     }
 }
 
-//Converts JSON text into JavaScript value
+/* Adds the DuckDB database of the accession code queried study data
+   and adds it to the database.
+
+   This is accomplished by getting the study information from sessionStorage,
+   then calling the API's submit function. Followed by a call to loadDatabase()
+   so the database reloads with the new information. (in the middle of debugging)
+   
+   Note: Converts JSON text into JavaScript value
+*/
+
 async function addToDatabase()
 {
     let studyInfo = sessionStorage.getItem("studyData"); 
@@ -349,6 +325,12 @@ async function addToDatabase()
 
     await loadDatabase();
 }
+
+/* This function allows the user to download the study data in the DuckDB database
+   into a CSV file.
+
+   An option to download as a TSV will be added in the future.
+*/
 
 document.getElementById("study_csv_download").addEventListener("click", async(e) =>
 {
@@ -460,6 +442,8 @@ document.getElementById("file_form").addEventListener("submit", async e => {
     
     A stronger visual update will eventually be added to let the user
     see what flagged the table row as a match and when the table is loaded. 
+
+    9/1/26 NOTE: For some reason this function's counterpart isn't working for the View Database tab. 
 */
 document.getElementById("custom_attribute_search_form").addEventListener("submit", async(e) =>
 {
@@ -527,76 +511,6 @@ document.getElementById("custom_attribute_search_form").addEventListener("submit
     await conn.close(); 
 })
 
-//Note: Has redundant code because it's not working if I try separating out at present
-document.getElementById("custom_attribute_search_form_database").addEventListener("submit", async(e) =>
-{
-    e.preventDefault(); 
-    console.log("Searching database");
-    
-    //Note: Will likely change name of this variable later
-    let customAttributes = document.getElementById("customAttributeData").value;
-    let header = "data_header_row";
-    console.log("Custom attribute: " + customAttributes);
-
-    //Test if string is empty
-    if(customAttributes == "")
-    {
-        console.log("Empty");
-        alert("Please enter a custom attribute to search for.");
-        return;
-    }
-
-    //Establish database connection
-    const conn = await db.connect();
-
-    //Do not load filtered table if the database is empty/no file loaded
-    //There is likely a more efficient way to do this
-    
-    const data = await conn.query("SELECT COUNT(*) AS count FROM information_schema.tables WHERE table_name = 'complete_database'");
-    let count = data.toArray()[0].count;
-    console.log("Count from information schema: " + count);
-    if(count == 0)
-    {
-        alert("Please add data to database.");
-        await conn.close();
-        return;
-    }
-
-    console.log("Creating search string");
-    //Note: Need to error check for if they try to search and the table is empty
-    //createSearchString dynamically builds the query string
-    let searchConditions = createSearchString(customAttributes, header);
-    let query_string = "SELECT source_study, accession, alias, center_name, " + 
-            "broker_name, title, taxon_id, scientific_name, common_name, description," + 
-            "bio_material, culture_collection, specimen_voucher, collected_by," + 
-            "collection_date, country, host, identified_by, isolation_source," + 
-            "lat_lon, lab_host, environmental_sample, mating_type, sex," + 
-            "cell_type, dev_stage, tissue_type, cultivar, ecotype," + 
-            "isolate, strain, sub_species, cell_line, serotype, serovar," +
-            "custom_attributes," + 
-            "tier, review_reason, year_reviewed, journal, n_samples," + 
-            "repository_link, paper_link, disease_evidence, disease_present," + 
-            "disease_from_names, age_present, sex_present, antibiotic_present," +
-            "geography_present, body_site_group, sequencing_type, disease_group," +
-            "age_key, sex_key, disease_key, reviewer, reviewer_agrees, reviewer_notes" +
-            " FROM complete_database WHERE " + searchConditions;
-    console.log("Query string: " + query_string);
-    //Obtain rows from database table
-    let result = await conn.query(query_string);
-
-    //Displays the number of results 
-    //This amount is determined from the entire database
-    //Not just the limited results
-    count = result.toArray().length;
-    console.log("Result length: " + count);
-
-    document.getElementById("numberStudiesData").innerText = count;
-    document.getElementById("search_results_data").style.display = "block";
-    displayHTML(result, "data_table_body", "data_header_row");
-
-    //Close database connection
-    await conn.close(); 
-})
 
 //Obtains column data 
 function getColumns(headerName)
@@ -670,6 +584,7 @@ function displayHTML(result, tableBody, headerName)
     //createElement documentation: https://developer.mozilla.org/en-US/docs/Web/API/Document/createElement
     let thead = document.getElementById(headerName); //This may cause problems later given that it's called header_row in two separte tables. Will need to see effects
     thead.innerHTML = "";
+    
     for(let i = 0; i < col; ++i)
     {
         let coli = document.createElement("col");
@@ -739,7 +654,8 @@ function displayHTML(result, tableBody, headerName)
     be fixed in future updates. 
 
     Currently the names of the checkboxes are fixed since the assumption is that 
-    the csvs uploaded all follow the same format.
+    the csvs uploaded all follow the same format. More may be added as we reassess and update
+    the table schemas. 
 
 */
 
@@ -767,9 +683,6 @@ function elementToggle(checkbox_id, checkbox_name, tableBody, headerName)
             return;
         }
 
-        //Hides the given column's header
-        //Note: style.visibility = "collapse" does properly hide it without crashing
-        //const header = document.querySelectorAll("#" + headerName + " th")[index];
         console.log("Adjusting: " + "col_" + checkbox_name + "_" + tableBody);
         if(this.checked)
         {
@@ -785,7 +698,7 @@ function elementToggle(checkbox_id, checkbox_name, tableBody, headerName)
 //Called here so that the checkbox functionality is always active
 //toggleAllColumns();
 
-//Adds the ability to hide/show columns to every checkbox
+//Adds the ability to hide/show columns to every checkbox. There may be a more efficient way to do this
 function toggleAllColumns()
 {
     //For the View CSV tab
@@ -841,7 +754,82 @@ function toggleAllColumns()
     elementToggle("serovar_data_toggle", "serovar", "data_table_body", "data_header_row");
 }
 
-/* Code for View Database */
+/* Code for View Database Tab*/
+//Note: Has redundant code because it's not working if I try separating out at present.
+//Has the same functionality as the previous function, but is currently not working. 
+document.getElementById("custom_attribute_search_form_database").addEventListener("submit", async(e) =>
+{
+    e.preventDefault(); 
+    console.log("Searching database");
+    
+    //Note: Will likely change name of this variable later
+    let customAttributes = document.getElementById("customAttributeData").value;
+    let header = "data_header_row";
+    console.log("Custom attribute: " + customAttributes);
+
+    //Test if string is empty
+    if(customAttributes == "")
+    {
+        console.log("Empty");
+        alert("Please enter a custom attribute to search for.");
+        return;
+    }
+
+    //Establish database connection
+    const conn = await db.connect();
+
+    //Do not load filtered table if the database is empty/no file loaded
+    //There is likely a more efficient way to do this
+    
+    const data = await conn.query("SELECT COUNT(*) AS count FROM information_schema.tables WHERE table_name = 'complete_database'");
+    let count = data.toArray()[0].count;
+    console.log("Count from information schema: " + count);
+    if(count == 0)
+    {
+        alert("Please add data to database.");
+        await conn.close();
+        return;
+    }
+
+    console.log("Creating search string");
+    //Note: Need to error check for if they try to search and the table is empty
+    //createSearchString dynamically builds the query string
+    let searchConditions = createSearchString(customAttributes, header);
+    let query_string = "SELECT source_study, accession, alias, center_name, " + 
+            "broker_name, title, taxon_id, scientific_name, common_name, description," + 
+            "bio_material, culture_collection, specimen_voucher, collected_by," + 
+            "collection_date, country, host, identified_by, isolation_source," + 
+            "lat_lon, lab_host, environmental_sample, mating_type, sex," + 
+            "cell_type, dev_stage, tissue_type, cultivar, ecotype," + 
+            "isolate, strain, sub_species, cell_line, serotype, serovar," +
+            "custom_attributes," + 
+            "tier, review_reason, year_reviewed, journal, n_samples," + 
+            "repository_link, paper_link, disease_evidence, disease_present," + 
+            "disease_from_names, age_present, sex_present, antibiotic_present," +
+            "geography_present, body_site_group, sequencing_type, disease_group," +
+            "age_key, sex_key, disease_key, reviewer, reviewer_agrees, reviewer_notes" +
+            " FROM complete_database WHERE " + searchConditions;
+    console.log("Query string: " + query_string);
+    //Obtain rows from database table
+    let result = await conn.query(query_string);
+
+    //Displays the number of results 
+    //This amount is determined from the entire database
+    //Not just the limited results
+    count = result.toArray().length;
+    console.log("Result length: " + count);
+
+    document.getElementById("numberStudiesData").innerText = count;
+    document.getElementById("search_results_data").style.display = "block";
+    displayHTML(result, "data_table_body", "data_header_row");
+
+    //Close database connection
+    await conn.close(); 
+})
+
+/* Adds the option to download the database as a CSV. In the future, will add 
+   option to download as TSV.
+*/
 document.getElementById("database_csv_download").addEventListener("click", async(e) =>
 {
     e.preventDefault();

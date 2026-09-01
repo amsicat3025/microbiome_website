@@ -24,11 +24,14 @@
             <button type="button" class="tablinks" id="dataTab">View Database</button>
         </div>
 
+        <!--HTML for the section about accessing data from studies-->
         <div id="access_data" class="tabcontent">
             <h1 class="d-flex align-items-center gap-3">Access Microbiome Data</h1>
             <p class="d-flex align-items-center gap-3">You can enter an accession code and pull up the data. Then, you can save it to the database.</p>
             <p class="d-flex align-items-center gap-3">At present, it only contains information directly accessible from the study.</p>
             <p class="d-flex align-items-center gap-3">In the future, an option to classify if it has a disease or is some other sample will be implemented.</p>
+            
+            <!--Search option for entering an accession code-->
             <div class = "accession_code_request">
                 <div class = "card">
                     <label><b>Enter an accession code</b></label>
@@ -41,7 +44,7 @@
                 </div>
             </div>
 
-            <!--Basically this loads the results of the current study to the database-->
+            <!--Outputs the study information from the accession code into a table-->
             <div class="container">
                 <div class="table_wrapper">
                     <table id=bio_table class="table table-striped mb-0 gap-3">
@@ -56,15 +59,13 @@
 
             <button type="button" id="database_save" type="submit">Save to Database</button>
 
-            <!--To download the updated/grabbed files as CSV files-->
-            <!--Documentation HERE: https://datatables.net/extensions/buttons/examples/html5/simple.html-->
-            <!--Note: This doesn't work-->
+            <!--Allows user to download study information in the form of a CSV.-->
             <button type="button" id="study_csv_download">Download as CSV</button>
 
         </div>
-        
+
+        <!--Tab for uploading and viewing CSV data-->
         <div id="view_csv" class="tabcontent">
-            <!--Tab for uploading and viewing CSV data-->
             <h1 class="d-flex align-items-center gap-3">Microbiome Data Upload</h1>
             <p class="d-flex align-items-center gap-3">You can upload a csv file and view the columns and data appropriately.</p>
         
@@ -83,18 +84,6 @@
                 </div>
                 </div>
             </div>
-
-            <!--For pagination (which only loads X results at a time, 
-            with an option to see the next or previous X results)-->
-            <!--<div id="pagination">
-                <label for="studiesPerPage">Studies Per Page:</label>
-                <select id="studiesPerPage">
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
-            </div>-->
 
             <!--Section for searching up custom attributes across all columns-->
             <!--Currently only returns results that contain the exact input to the searchbar-->
@@ -175,6 +164,7 @@
             </div>-->
         </div>
 
+        <!--Tab for viewing the database and its contents.-->
         <div id="view_database" class="tabcontent">
             <h1 class="d-flex align-items-center gap-3">Database Viewing Portal</h1>
             <p class="d-flex align-items-center gap-3">You can view the entire database here. The page may take awhile to load everything, so please be patient.</p>

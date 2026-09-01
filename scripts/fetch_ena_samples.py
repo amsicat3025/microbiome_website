@@ -41,32 +41,7 @@ study_num = 16566
 # may be an issue when updating in regards to like future columns and all that stuff
 # but rn proof of concept (uploading db file) is more necessary
 
-# Make something similar for MMC / other datasets
-# Need metadata file
-
-# for MMC in particular:
-# ok here are the "finished" files. I still am finalizing the tiers but for tier 1s and 2s 
-# if reviewer agrees says Yes we can use them and the disease_key or reviewer_notes 
-# will have info on what ENA field delineates disease. In the tier3 file if reviewer agrees 
-# is No then that study has disease info which should be in disease key or reviewer notes. 
-# Sorry I know this is alot so please lemme know if you have questions.
-
-# Anyway my prevailing assumption is that we will manually be adding in
-# Tiers, reviewer, year (reviewed; ask about that), reviewer_agrees, reviewer_notes 
-# will be added in manually, since it's not in the journals by default
-# since it can't be pulled from the site data
-# therefore the columns still exist they're just null
-# But also for the disease aspect it's also kind of null...?
-
-# Ask about editable columns and when Barnacle access will come since August is almost over
-# Rob will be back on Monday 
-# Better to add an "upload to TSV/CSV"
-# And no I really can't add anythng without the other stuff rip
-# PCOA only wants disease groups
-# Actual disease will be more for finetuning stuff
-# And naturally it's like anti-ai
-# Ask about the AI statement for like... code debugging/how to do X
-
+# engine used for database queries
 engine = create_engine(f"postgresql://{user}:{password}@{host}:{port}/{db}")
 inspector = inspect(engine)
 
@@ -404,6 +379,12 @@ def delete_checkpoint(label: str) -> None:
         print(f"  Checkpoint deleted ({path}).")
 
 # Main
+"""
+Created by Camille and then adapted for use with the API.
+
+This version takes in command line inputs and then creates a CSV file with the given data
+"""
+
 def main():
     args = parse_args()
  
@@ -512,8 +493,13 @@ def main():
     # Documentation: https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_sql.html
     df.to_sql("micro_data",engine,if_exists="append",index=False)
 
-# Note: Not a viable long-term solution; currently like this for testing
-# There is definitely a simpler way I'm just overthinking
+"""
+A version of the main() function adapted for use with the API and webpage. 
+
+It has been modularized, and returns a df that can be used later on.
+
+The current version is a bit unwieldy and could be updated for readability/usability.
+"""
 def run(accession_codes:str, fast=False):
     accession_codes=[accession_codes]
     print(accession_codes)
@@ -622,10 +608,14 @@ def run(accession_codes:str, fast=False):
     delete_checkpoint(label)
 
     return df
-    
-"""def createDataRow(df):
-    df.to_sql("micro_data",engine,if_exists="append",index=False)"""
 
+"""
+Adds data from Access Data or View CSV to the database. 
+
+Some additional columns are added for future usage and may be added/removed as necessary. 
+
+TO-DO: Prevent duplicates from being added
+"""
 def addToDatabase(df):
     # Need to avoid duplicates being added
     # Convert JSON => df
@@ -649,7 +639,14 @@ def addToDatabase(df):
         df = df.reindex(columns=columns_order)
         df.to_sql("micro_data",engine,if_exists="append",index=False)
 
-"""pd.read_sql documentation: https://pandas.pydata.org/docs/reference/api/pandas.read_sql.html"""
+"""
+pd.read_sql documentation: https://pandas.pydata.org/docs/reference/api/pandas.read_sql.html
+
+Used to retrieve study data from the database. Returns a df that can be converted into a 
+database with DuckDB.
+
+The commented out section is still there for debugging purposes.
+"""
 def retrieveDatabase():
     """if(inspector.has_table("micro_data")):
         columns_order = [
@@ -710,6 +707,11 @@ def createTSV():
     return 
 
 # Qiita API Documentation: https://qiita.ucsd.edu/static/doc/html/dev/rest.html
+"""
+Function for uploading a TSV to Qiita and such.
+
+Low-priority.
+"""
 def uploadTSV():
     tsv_data = createTSV()
     try:
@@ -721,7 +723,11 @@ def uploadTSV():
     except:
         print("Failed to upload to Qiita")
 
+"""
+Function for uploading a TSV to Qiita and such.
 
+Low-priority.
+"""
 def testUpload():
     tsv_data = createTSV()
     response = requests.patch(
@@ -736,7 +742,3 @@ def testUpload():
 if __name__ == "__main__":
     #main()
     testUpload()
-    # see if redbiome gives any luck
-    # check barnacle - HSPC Server for the lab
-    # Barnacle > Qmounts which will get automatically uploaded to Qiita
-    # Need to get access to Barnacle through a training and whatnot

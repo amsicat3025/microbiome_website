@@ -18,15 +18,13 @@
    TO-DO:
    - Get basic code to work (DONE)
    - Add in ENA Portal: https://www.ebi.ac.uk/ena/portal/api/swagger-ui/index.html (DONE)
-   - Integrate with Cham's script 
+   - Integrate with Camille's script 
      - Fetching samples: Yes (except not really freaking HTML)
-     - Classifying samples: Yesn't
-   - Integrate with PostGreSQL for large database size
-   - Integrate with pre-existing HTML webpage
+     - Classifying samples: Yesn't (not really sure if this is strictly necessary)
+   - Integrate with PostGreSQL for large database size (DONE)
+   - Integrate with pre-existing HTML webpage (DONE)
    - Add NCBI accessor codes if needed later on 
    - Can be used in a paper (so clean up thoroughly)
-   - Endgoal is to make it web-accessible (ideally without cheetah)
-   - Affordable online database storage (research it and live off of Google Sheets)
 
    Documentation for FastAPI with JSON: https://fastapi.tiangolo.com/tutorial/body/
    Documentation for getting around CORS: https://fastapi.tiangolo.com/tutorial/cors/#wildcards
@@ -41,6 +39,7 @@ import pandas as pd
 
 app = FastAPI()
 
+# Default base model
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
@@ -67,27 +66,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# wait what was I using this for
+# Holdovers from when I was debugging; may need to use these later
 class AccessionCode(BaseModel):
     accession_code: str
 
 class DataFrame(BaseModel):
     dataframe: list[dict]
 
-"""Used for accession code fetching using the public ENA API"""
-# Note: Should only be returning data
-# But the current version is for debugging the parsing/whatever
-# Also like this is just so you see the info from said study and whatever
-# before choosing to do. All that other stuff
+"""
+Used for accession code fetching using the public ENA API.
+Calls the run function from fetch_ena_samples to process and find the studies, then
+Filters returns them. 
+"""
 @app.get("/fetch/{accession}")
 def fetch_accession(accession: str):
     df = run(accession_codes=accession) 
     return {"status": "ok", "accession": accession, "data": df.to_dict(orient="records")}
     # return data
-    """data = fetch(accession)
-    return data"""
 
-"""Used for parsing data and then adding it to csv/database"""
+"""
+Used for parsing data and then adding it to csv/database.
+Calls addToDatabase() from fetch_ena_samples
+"""
 # Status Code documentation: https://fastapi.tiangolo.com/advanced/response-change-status-code/
 # Sequence should be: Press "Upload to database" => Call run(accession) => do all that fun stuff => Write to database and not a csv
 @app.post("/submit")
@@ -97,6 +97,9 @@ def submit(data: DataFrame):
     # tsv_data = createTSV()
     return {"status": "ok"}
 
+"""
+Used for downloading information as CSV files.
+"""
 @app.post("/download")
 def download(data: DataFrame):
     df = pd.DataFrame(data.dataframe)
@@ -104,7 +107,10 @@ def download(data: DataFrame):
     return {"status": "ok"}
 
 
-"""Used for pulling up database information"""
+"""
+Used for pulling up database information via call to 
+retrieveDatabase() from fetch_ena_samples.
+"""
 @app.get("/database")
 def get_database():
     results = retrieveDatabase()
@@ -112,10 +118,4 @@ def get_database():
 
 # Debugger
 if __name__ == '__main__':
-    print("Pain and Suffering")
-
-"""Anyway from my understanding is that I have to get some code that like
-I dunno
-upon the user saying 'Hey so I want this like parsed or whatever', send a message to...
-command line
-hmmm"""
+    print("Debugging")
