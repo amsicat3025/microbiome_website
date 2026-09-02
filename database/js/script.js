@@ -521,6 +521,7 @@ function getColumns(headerName)
 //Dynamically creates query search string based on every column
 function createSearchString(searchAttribute, headerName)
 {
+    let searchCopy = searchAttribute.toLowerCase(); 
     let searchConditions = "";
     const columns = getColumns(headerName);
 
@@ -530,11 +531,11 @@ function createSearchString(searchAttribute, headerName)
     {
         if(i < len - 1)
         {
-            searchConditions += "CAST(" + columns[i] + " AS TEXT) LIKE '%" + searchAttribute + "%' OR ";
+            searchConditions += "LOWER(CAST(" + columns[i] + " AS TEXT)) LIKE '%" + searchCopy + "%' OR ";
         }
         else
         {
-            searchConditions += "CAST(" + columns[i] + " AS TEXT) LIKE '%" + searchAttribute + "%'";
+            searchConditions += "LOWER(CAST(" + columns[i] + " AS TEXT)) LIKE '%" + searchCopy + "%'";
         }
     }
     return searchConditions;
@@ -562,7 +563,7 @@ function displayHTML(result, tableBody, headerName)
     if(len == 0)
     {
         console.log("CSV empty"); 
-        alert("No CSV data found");
+        alert("No data found");
         return; 
     }
     
@@ -795,7 +796,7 @@ document.getElementById("custom_attribute_search_form_database").addEventListene
     //Note: Need to error check for if they try to search and the table is empty
     //createSearchString dynamically builds the query string
     let searchConditions = createSearchString(customAttributes, header);
-    let query_string = "SELECT source_study, accession, alias, center_name, " + 
+    /*let query_string = "SELECT source_study, accession, alias, center_name, " + 
             "broker_name, title, taxon_id, scientific_name, common_name, description," + 
             "bio_material, culture_collection, specimen_voucher, collected_by," + 
             "collection_date, country, host, identified_by, isolation_source," + 
@@ -808,7 +809,8 @@ document.getElementById("custom_attribute_search_form_database").addEventListene
             "disease_from_names, age_present, sex_present, antibiotic_present," +
             "geography_present, body_site_group, sequencing_type, disease_group," +
             "age_key, sex_key, disease_key, reviewer, reviewer_agrees, reviewer_notes" +
-            " FROM complete_database WHERE " + searchConditions;
+            " FROM complete_database WHERE " + searchConditions;*/
+    let query_string = "SELECT * FROM complete_database WHERE " + searchConditions;
     console.log("Query string: " + query_string);
     //Obtain rows from database table
     let result = await conn.query(query_string);
