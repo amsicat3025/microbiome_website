@@ -2,6 +2,8 @@
 [UNDER CONSTRUCTION]
 A respository for the knowledge base for the Microbiome Metadata Crisis.
 
+A clone of Camille Sicat's microbiome-knowledge-base repo for GitHub Pages purposes.
+
 # Project Overview
 This repository is designed as a prototype knowledge base for the Microbiome Metadata Crisis (MMC) projects. It contains scripts to scrape data from ENA and is planned to contain integration with LLM for data analysis. 
 
